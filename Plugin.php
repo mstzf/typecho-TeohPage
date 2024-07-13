@@ -53,7 +53,6 @@ class TeohPage_Plugin implements Typecho_Plugin_Interface
 
         $jsCode = new Typecho_Widget_Helper_Form_Element_Textarea('jsCode', NULL, '', _t('JavaScript 代码'), _t('输入自定义页面的 JavaScript 代码'));
         $form->addInput($jsCode);
-
         $showHeader = new Typecho_Widget_Helper_Form_Element_Radio('showHeader', array('1' => '显示', '0' => '隐藏'), '1', _t('是否显示头部'));
         $form->addInput($showHeader);
 
