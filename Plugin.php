@@ -27,9 +27,16 @@ class TeohPage_Plugin implements Typecho_Plugin_Interface
     public static function deactivate()
     {
         $themeDir = __DIR__ . '/../../themes/' . Helper::options()->theme;
-        $templateFile = $themeDir . '/page-teoh.php';
-        if (file_exists($templateFile)) {
-            unlink($templateFile);
+        $templateDir = __DIR__ . '/templates';
+        $templateFiles = scandir($templateDir);
+    
+        foreach ($templateFiles as $file) {
+            if (strpos($file, '.php') !== false) { // 仅筛选PHP文件
+                $templateFile = $themeDir . '/' . $file;
+                if (file_exists($templateFile)) {
+                    unlink($templateFile);
+                }
+            }
         }
         return _t('插件已禁用');
     }
@@ -95,30 +102,76 @@ class TeohPage_Plugin implements Typecho_Plugin_Interface
     {
     }
 
-    /**
-     * 在页面编辑界面添加模板选项
-     */
-    public static function addTemplateOption()
-    {
-        ?>
-        <script>
-            $(document).ready(function () {
-                var templateOption = '<option value="page-teoh">Teoh界面</option>';
-                $('#template').append(templateOption);
-            });
-        </script>
-        <?php
-    }
+/**
+ * 在页面编辑界面添加模板选项
+ */
+public static function addTemplateOption()
+{
+    $templateDir = __DIR__ . '/templates';
+    $templateFiles = scandir($templateDir);
+    $templateOptions = '';
 
-    /**
-     * 应用自定义模板
-     */
-    public static function applyTemplate($archive)
-    {
-        if ($archive->is('page') && $archive->template == 'page-teoh') {
-            $archive->setThemeFile('page-teoh.php');
+    foreach ($templateFiles as $file) {
+        if (strpos($file, '.php') !== false) { // 仅筛选PHP文件
+            $templatePath = $templateDir . '/' . $file;
+            $templateName = self::extractTemplateName($templatePath);
+
+            if ($templateName) {
+                $templateOptions .= '<option value="' . $templateName . '">' . $templateName . '</option>';
+            } else {
+                $templateOptions .= '<option value="' . basename($file, '.php') . '">' . basename($file, '.php') . '</option>';
+            }
         }
     }
+    ?>
+    <script>
+        $(document).ready(function () {
+            var templateOptions = '<?php echo $templateOptions; ?>';
+            $('#template').append(templateOptions);
+        });
+    </script>
+    <?php
+}
+
+/**
+ * 应用自定义模板
+ */
+public static function applyTemplate($archive)
+{
+    $templateDir = __DIR__ . '/templates';
+    $templateFiles = scandir($templateDir);
+
+    foreach ($templateFiles as $file) {
+        if (strpos($file, '.php') !== false) { // 仅筛选PHP文件
+            $templatePath = $templateDir . '/' . $file;
+            $templateName = self::extractTemplateName($templatePath);
+
+            if ($archive->is('page') && $archive->template == ($templateName ?: basename($file, '.php'))) {
+                $archive->setThemeFile($file);
+                break;
+            }
+        }
+    }
+}
+
+/**
+ * 从模板文件中提取模板名称
+ * @param string $filePath
+ * @return string|null
+ */
+private static function extractTemplateName($filePath)
+{
+    $content = file_get_contents($filePath);
+
+    // 匹配注释中的第一行，提取界面名称
+    if (preg_match('/\/\*\*\s*\n\s*\*\s*(.*?)\n/', $content, $matches)) {
+        return trim($matches[1]);
+    }
+
+    return null;
+}
+
+
 
     /**
      * 复制模板文件到主题目录
@@ -126,9 +179,18 @@ class TeohPage_Plugin implements Typecho_Plugin_Interface
     private static function copyTemplateToTheme()
     {
         $themeDir = __DIR__ . '/../../themes/' . Helper::options()->theme;
-        $templateFile = $themeDir . '/page-teoh.php';
-        if (!file_exists($templateFile)) {
-            copy(__DIR__ . '/templates/page-teoh.php', $templateFile);
+        $templateDir = __DIR__ . '/templates';
+        $templateFiles = scandir($templateDir);
+
+        foreach ($templateFiles as $file) {
+            if (strpos($file, '.php') !== false) { // 仅筛选PHP文件
+                $sourceFile = $templateDir . '/' . $file;
+                $destFile = $themeDir . '/' . $file;
+                
+                if (!file_exists($destFile)) {
+                    copy($sourceFile, $destFile);
+                }
+            }
         }
     }
 

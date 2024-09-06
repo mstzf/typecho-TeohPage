@@ -1,4 +1,16 @@
 <?php
+/**
+ * Teo插件
+ *
+ * @package TeoPlugins
+ */
+
+/**
+ * 组件样式来自插件设置中获取的 html、css、js
+ * 仅仅做了与handsome主题的兼容
+ */
+?>
+<?php
 // 获取插件配置
 $options = Typecho_Widget::widget('Widget_Options')->plugin('TeohPage');
 $html = $options->html;
@@ -54,7 +66,7 @@ $jsonData = json_encode($data);
 <?php endif; ?>
 
 <!-- 插入自定义 CSS 代码 -->
-
+<link rel="stylesheet" href="/usr/plugins/TeohPage/assets/css/about.css">
 <style>
     <?php if (!$showSidebar): ?>
         /* 隐藏侧边栏 */
@@ -134,44 +146,46 @@ $jsonData = json_encode($data);
 <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/gsap/3.9.1/gsap.min.js"></script>
 <script defer>
     const statisticElement = document.getElementById('statistic');
-    const targets = {
-        "今日人数": <?php echo $data['today_unique_visitors']; ?>,
-        "今日访问": <?php echo $data['today_views']; ?>,
-        "昨日人数": <?php echo $data['yesterday_unique_visitors']; ?>,
-        "昨日访问": <?php echo $data['yesterday_views']; ?>,
-        "本月访问": <?php echo $data['month_total_views']; ?>,
-        "总访问量": <?php echo $data['total_total_views']; ?>
-    };
-    // 动画时长（秒）
-    const duration = 2;
+    if(statisticElement){
+    	const targets = {
+        	"今日人数": <?php echo $data['today_unique_visitors']; ?>,
+        	"今日访问": <?php echo $data['today_views']; ?>,
+        	"昨日人数": <?php echo $data['yesterday_unique_visitors']; ?>,
+        	"昨日访问": <?php echo $data['yesterday_views']; ?>,
+        	"本月访问": <?php echo $data['month_total_views']; ?>,
+        	"总访问量": <?php echo $data['total_total_views']; ?>
+    	};
+    	// 动画时长（秒）
+    	const duration = 2;
 
-    function animateNumbers(entries, observer) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // 为所有目标数字元素添加动画
-                Object.keys(targets).forEach(id => {
-                    const el = document.getElementById(id);
-                    gsap.to(el, {
-                        innerText: targets[id],
-                        duration: duration,
-                        ease: "none",
-                        onUpdate: function () {
-                            el.innerText = Math.floor(el.innerText);
-                        }
-                    });
-                });
-                // Animate only once, so unobserve the element after the animation has started
-                observer.unobserve(statisticElement);
-            }
-        });
+    	function animateNumbers(entries, observer) {
+        	entries.forEach(entry => {
+            	if (entry.isIntersecting) {
+                	// 为所有目标数字元素添加动画
+                	Object.keys(targets).forEach(id => {
+                    	const el = document.getElementById(id);
+                    	gsap.to(el, {
+                        	innerText: targets[id],
+                        	duration: duration,
+                        	ease: "none",
+                        	onUpdate: function () {
+                            	el.innerText = Math.floor(el.innerText);
+                        	}
+                    	});
+                	});
+                	// Animate only once, so unobserve the element after the animation has started
+                	observer.unobserve(statisticElement);
+            	}
+        	});
+    	}
+
+    	// 创建Intersection Observer实例
+    	const observer = new IntersectionObserver(animateNumbers, {
+        	threshold: 0.5 // 当statistic元素有50%可见时触发
+    	});
+
+    	observer.observe(statisticElement);
     }
-
-    // 创建Intersection Observer实例
-    const observer = new IntersectionObserver(animateNumbers, {
-        threshold: 0.5 // 当statistic元素有50%可见时触发
-    });
-
-    observer.observe(statisticElement);
 </script>
 
 <!-- 插入自定义 JavaScript 链接 -->
